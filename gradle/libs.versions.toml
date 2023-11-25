@@ -13,12 +13,19 @@ fabric_api = "0.90.0+1.20.2"
 mixin_extras = "0.2.0-rc.5"
 yet_another_config_lib = "3.2.1+1.20.2"
 mod_menu = "8.0.0"
+twelvemonkeys_imageio = "3.10.0"
 
 [libraries]
 minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
 fabric_loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric_loader" }
 fabric_api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fabric_api" }
 mixin_extras = { module = "com.github.llamalad7.mixinextras:mixinextras-fabric", version.ref = "mixin_extras" }
+twelvemonkeys_imageio_core = { module = "com.twelvemonkeys.imageio:imageio-core", version.ref = "twelvemonkeys_imageio" }
+twelvemonkeys_imageio_webp = { module = "com.twelvemonkeys.imageio:imageio-webp", version.ref = "twelvemonkeys_imageio" }
+twelvemonkeys_imageio_metadata = { module = "com.twelvemonkeys.imageio:imageio-metadata", version.ref = "twelvemonkeys_imageio" }
+twelvemonkeys_common_lang = { module = "com.twelvemonkeys.common:common-lang", version.ref = "twelvemonkeys_imageio" }
+twelvemonkeys_common_io = { module = "com.twelvemonkeys.common:common-io", version.ref = "twelvemonkeys_imageio" }
+twelvemonkeys_common_image = { module = "com.twelvemonkeys.common:common-image", version.ref = "twelvemonkeys_imageio" }
 yet_another_config_lib = { module = "dev.isxander.yacl:yet-another-config-lib-fabric", version.ref = "yet_another_config_lib" }
 mod_menu = { module = "com.terraformersmc:modmenu", version.ref = "mod_menu" }
 
@@ -30,3 +37,13 @@ cursegradle = { id = "me.hypherionmc.cursegradle", version.ref = "cursegradle" }
 github_release = { id = "com.github.breadmoirai.github-release", version.ref = "github_release" }
 machete = { id = "io.github.p03w.machete", version.ref = "machete" }
 grgit = { id = "org.ajoberstar.grgit", version.ref = "grgit" }
+
+[bundles]
+twelvemonkeys_imageio = [
+    "twelvemonkeys_imageio_core",
+    "twelvemonkeys_imageio_webp",
+    "twelvemonkeys_imageio_metadata",
+    "twelvemonkeys_common_lang",
+    "twelvemonkeys_common_io",
+    "twelvemonkeys_common_image"
+]
