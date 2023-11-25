@@ -1,0 +1,32 @@
+[versions]
+loom = "1.4.+"
+minotaur = "2.7.+"
+cursegradle = "2.+"
+github_release = "2.+"
+machete = "2.+"
+grgit = "5.2.+"
+
+minecraft = "1.20.2"
+quilt_mappings = "3"
+fabric_loader = "0.14.23"
+fabric_api = "0.90.0+1.20.2"
+mixin_extras = "0.2.0-rc.5"
+yet_another_config_lib = "3.2.1+1.20.2"
+mod_menu = "8.0.0"
+
+[libraries]
+minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
+fabric_loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric_loader" }
+fabric_api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fabric_api" }
+mixin_extras = { module = "com.github.llamalad7.mixinextras:mixinextras-fabric", version.ref = "mixin_extras" }
+yet_another_config_lib = { module = "dev.isxander.yacl:yet-another-config-lib-fabric", version.ref = "yet_another_config_lib" }
+mod_menu = { module = "com.terraformersmc:modmenu", version.ref = "mod_menu" }
+
+[plugins]
+loom = { id = "fabric-loom", version.ref = "loom" }
+
+minotaur = { id = "com.modrinth.minotaur", version.ref = "minotaur" }
+cursegradle = { id = "me.hypherionmc.cursegradle", version.ref = "cursegradle" }
+github_release = { id = "com.github.breadmoirai.github-release", version.ref = "github_release" }
+machete = { id = "io.github.p03w.machete", version.ref = "machete" }
+grgit = { id = "org.ajoberstar.grgit", version.ref = "grgit" }
