@@ -7,6 +7,8 @@ import com.mojang.blaze3d.platform.NativeImage;
 import com.twelvemonkeys.imageio.plugins.webp.WebPImageReaderSpi;
 import dev.isxander.yaul3.api.image.ImageRendererFactory;
 import dev.isxander.yaul3.debug.DebugProperties;
+import dev.isxander.yaul3.mixins.webp.AnimationFrameAccessor;
+import dev.isxander.yaul3.mixins.webp.WebPImageReaderAccessor;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
@@ -151,23 +153,12 @@ public class AnimatedDynamicTextureImage extends DynamicTextureImage {
             int numImages = reader.getNumImages(true); // Force reading of all frames
             AnimFrameProvider animFrameFunction = i -> null;
             if (numImages > 1) {
-                // WebP reader does not expose frame delay, prepare for reflection hell
-                Class<?> webpReaderClass = Class.forName("com.twelvemonkeys.imageio.plugins.webp.WebPImageReader");
-                Field framesField = webpReaderClass.getDeclaredField("frames");
-                framesField.setAccessible(true);
-                java.util.List<?> frames = (List<?>) framesField.get(reader);
-
-                Class<?> animationFrameClass = Class.forName("com.twelvemonkeys.imageio.plugins.webp.AnimationFrame");
-                Field durationField = animationFrameClass.getDeclaredField("duration");
-                durationField.setAccessible(true);
-                Field boundsField = animationFrameClass.getDeclaredField("bounds");
-                boundsField.setAccessible(true);
-
+                List<?> frames = ((WebPImageReaderAccessor) reader).getFrames();
                 animFrameFunction = i -> {
-                    Rectangle bounds = (Rectangle) boundsField.get(frames.get(i));
-                    return new AnimFrame((int) durationField.get(frames.get(i)), bounds.x, bounds.y);
+                    AnimationFrameAccessor frame = (AnimationFrameAccessor) frames.get(i);
+                    Rectangle bounds = frame.getBounds();
+                    return new AnimFrame(frame.getDuration(), bounds.x, bounds.y);
                 };
-                // that was fun
             }
 
             return createFromImageReader(reader, animFrameFunction, uniqueLocation);
