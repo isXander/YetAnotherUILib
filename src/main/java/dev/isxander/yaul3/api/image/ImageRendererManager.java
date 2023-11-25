@@ -1,89 +1,43 @@
 package dev.isxander.yaul3.api.image;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import dev.isxander.yaul3.util.LoggerManager;
-import net.minecraft.client.Minecraft;
+import dev.isxander.yaul3.YAUL3;
+import dev.isxander.yaul3.api.image.ImageRenderer;
+import dev.isxander.yaul3.api.image.ImageRendererFactory;
 import net.minecraft.resources.ResourceLocation;
-import org.slf4j.Logger;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
-public class ImageRendererManager {
-    private static final Logger LOGGER = LoggerManager.createLogger("ImageRendererManager");
-    private static final ExecutorService SINGLE_THREAD_EXECUTOR = Executors.newSingleThreadExecutor(task -> new Thread(task, "YACL Image Prep"));
+public interface ImageRendererManager {
+    /**
+     * Register an image to be rendered.
+     * @param id The ID of the image.
+     * @param factory The factory used to create the image.
+     * @return A future that will be completed when the image is ready to be rendered.
+     * @param <T> The type of the image.
+     */
+    <T extends ImageRenderer> CompletableFuture<T> registerImage(ResourceLocation id, ImageRendererFactory<T> factory);
 
-    private static final Map<ResourceLocation, CompletableFuture<ImageRenderer>> IMAGE_CACHE = new ConcurrentHashMap<>();
+    /**
+     * Load the image factory on the render thread and complete the future associated with the image.
+     * @param id The ID of the image.
+     * @param supplier The supplier of the image factory.
+     * @param future The future to complete.
+     * @param <T> The type of the image.
+     */
+    <T extends ImageRenderer> void completeImageFactory(ResourceLocation id, Supplier<Optional<ImageRendererFactory.ImageSupplier<T>>> supplier, CompletableFuture<ImageRenderer> future);
 
-    @SuppressWarnings("unchecked")
-    public static <T extends ImageRenderer> CompletableFuture<T> registerImage(ResourceLocation id, ImageRendererFactory<T> factory) {
-        if (IMAGE_CACHE.containsKey(id)) {
-            return (CompletableFuture<T>) IMAGE_CACHE.get(id);
-        }
+    /**
+     * Close all images and force any pending images to be completed immediately on the main thread.
+     */
+    void closeAll();
 
-        var future = new CompletableFuture<ImageRenderer>();
-        IMAGE_CACHE.put(id, future);
-
-        SINGLE_THREAD_EXECUTOR.submit(() -> {
-            Supplier<Optional<ImageRendererFactory.ImageSupplier<T>>> supplier =
-                    factory.requiresOffThreadPreparation()
-                            ? new CompletedSupplier<>(safelyPrepareFactory(id, factory))
-                            : () -> safelyPrepareFactory(id, factory);
-
-            Minecraft.getInstance().execute(() -> completeImageFactory(id, supplier, future));
-        });
-
-        return (CompletableFuture<T>) future;
+    /**
+     * Get an instance of the image renderer manager.
+     * @return The image renderer manager.
+     */
+    default ImageRendererManager getInstance() {
+        return YAUL3.getInstance().imageRendererManager;
     }
-
-    private static <T extends ImageRenderer> void completeImageFactory(ResourceLocation id, Supplier<Optional<ImageRendererFactory.ImageSupplier<T>>> supplier, CompletableFuture<ImageRenderer> future) {
-        RenderSystem.assertOnRenderThread();
-
-        ImageRendererFactory.ImageSupplier<T> completableImage = supplier.get().orElse(null);
-        if (completableImage == null) {
-            return;
-        }
-
-        // sanity check - this should never happen
-        if (future.isDone()) {
-            LOGGER.error("Image '{}' was already completed", id);
-            return;
-        }
-
-        ImageRenderer image;
-        try {
-            image = completableImage.completeImage();
-        } catch (Exception e) {
-            LOGGER.error("Failed to create image '{}'", id, e);
-            return;
-        }
-
-        future.complete(image);
-    }
-
-    public static void closeAll() {
-        SINGLE_THREAD_EXECUTOR.shutdownNow();
-        IMAGE_CACHE.values().removeIf(future -> {
-            if (future.isDone()) {
-                future.join().close();
-            }
-            return true;
-        });
-    }
-
-    private static <T extends ImageRenderer> Optional<ImageRendererFactory.ImageSupplier<T>> safelyPrepareFactory(ResourceLocation id, ImageRendererFactory<T> factory) {
-        try {
-            return Optional.of(factory.prepareImage());
-        } catch (Exception e) {
-            LOGGER.error("Failed to prepare image '{}'", id, e);
-            IMAGE_CACHE.remove(id);
-            return Optional.empty();
-        }
-    }
-
-    private record CompletedSupplier<T>(T get) implements Supplier<T> {
-    }
-
 }

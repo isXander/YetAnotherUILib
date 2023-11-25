@@ -16,7 +16,7 @@
   "environment": "client",
   "entrypoints": {
     "client": [
-      "dev.isxander.yaul3.Yaul3Entrypoint"
+      "dev.isxander.yaul3.YAUL3"
     ]
   },
   "mixins": [
