@@ -14,7 +14,6 @@ plugins {
 group = "dev.isxander"
 version = "1.0.0+1.20.2"
 
-/* UNCOMMENT OR DELETE IF YOU WANT TESTMOD SOURCESET
 val testmod by sourceSets.registering {
     compileClasspath += sourceSets.main.get().compileClasspath
     runtimeClasspath += sourceSets.main.get().runtimeClasspath
@@ -32,7 +31,6 @@ loom {
 
     createRemapConfigurations(testmod.get())
 }
-*/
 
 repositories {
     mavenCentral()

@@ -1,0 +1,9 @@
+{
+  "package": "dev.isxander.yaul3.test.mixins",
+  "required": true,
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_17",
+  "mixins": [
+
+  ]
+}
