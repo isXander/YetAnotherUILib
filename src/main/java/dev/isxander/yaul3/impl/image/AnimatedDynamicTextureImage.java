@@ -43,6 +43,8 @@ public class AnimatedDynamicTextureImage extends DynamicTextureImage {
     private final int packCols, packRows;
     private final int frameWidth, frameHeight;
 
+    private boolean paused = false;
+
     public AnimatedDynamicTextureImage(NativeImage image, int frameWidth, int frameHeight, int frameCount, double[] frameDelayMS, int packCols, int packRows, ResourceLocation uniqueLocation) {
         super(image, uniqueLocation);
         this.frameWidth = frameWidth;
@@ -51,6 +53,39 @@ public class AnimatedDynamicTextureImage extends DynamicTextureImage {
         this.frameDelays = frameDelayMS;
         this.packCols = packCols;
         this.packRows = packRows;
+    }
+
+    /**
+     * Pause the animation.
+     * @param isPaused Whether to pause the animation.
+     */
+    public void setPaused(boolean isPaused) {
+        this.paused = isPaused;
+    }
+
+    /**
+     * Move the animation to the next frame.
+     */
+    public void nextFrame() {
+        this.currentFrame++;
+        if (this.currentFrame >= this.frameCount - 1)
+            this.currentFrame = 0;
+    }
+
+    /**
+     * Move the animation to the previous frame.
+     */
+    public void previousFrame() {
+        this.currentFrame--;
+        if (this.currentFrame < 0)
+            this.currentFrame = this.frameCount - 1;
+    }
+
+    /**
+     * Reset the animation to the first frame.
+     */
+    public void reset() {
+        this.currentFrame = 0;
     }
 
     @Override
@@ -81,15 +116,13 @@ public class AnimatedDynamicTextureImage extends DynamicTextureImage {
         );
         graphics.pose().popPose();
 
-        if (frameCount > 1) {
+        if (frameCount > 1 && !paused) {
             double timeMS = Blaze3D.getTime() * 1000;
             if (lastFrameTime == 0) lastFrameTime = timeMS;
             if (timeMS - lastFrameTime >= frameDelays[currentFrame]) {
-                currentFrame++;
+                nextFrame();
                 lastFrameTime = timeMS;
             }
-            if (currentFrame >= frameCount - 1)
-                currentFrame = 0;
         }
 
         return targetHeight;
