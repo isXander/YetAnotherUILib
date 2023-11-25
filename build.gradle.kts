@@ -3,12 +3,12 @@ plugins {
 
     alias(libs.plugins.loom)
 
-    alias(libs.plugins.minotaur)
-    alias(libs.plugins.cursegradle)
-    alias(libs.plugins.github.release)
-    alias(libs.plugins.machete)
-    alias(libs.plugins.grgit)
-    `maven-publish`
+//    alias(libs.plugins.minotaur)
+//    alias(libs.plugins.cursegradle)
+//    alias(libs.plugins.github.release)
+//    alias(libs.plugins.machete)
+//    alias(libs.plugins.grgit)
+//    `maven-publish`
 }
 
 group = "dev.isxander"
@@ -115,110 +115,111 @@ tasks {
     register("releaseMod") {
         group = "mod"
 
-        dependsOn("modrinth")
-        dependsOn("modrinthSyncBody")
-        dependsOn("curseforge")
-        dependsOn("publish")
-        dependsOn("githubRelease")
+//        dependsOn("modrinth")
+//        dependsOn("modrinthSyncBody")
+//        dependsOn("curseforge")
+//        dependsOn("publish")
+//        dependsOn("githubRelease")
     }
 }
 
-machete {
-    json.enabled.set(false)   
-}
+//machete {
+//    json.enabled.set(false)
+//}
 
 java {
     withSourcesJar()   
 }
 
-val changelogText = file("changelogs/${project.version}.md").takeIf { it.exists() }?.readText() ?: "No changelog provided."
-
-val modrinthId: String by project
-if (modrinthId.isNotEmpty()) {
-    modrinth {
-        token.set(findProperty("modrinth.token")?.toString())
-        projectId.set(modrinthId)
-        versionNumber.set("${project.version}")
-        versionType.set("release")
-        uploadFile.set(tasks["remapJar"])
-        gameVersions.set(listOf("1.20.1"))
-        loaders.set(listOf("fabric", "quilt"))
-        changelog.set(changelogText)
-        syncBodyFrom.set(file("README.md").readText())
-    }
-}
-
-val curseforgeId: String by project
-if (hasProperty("curseforge.token") && curseforgeId.isNotEmpty()) {
-    curseforge {
-        apiKey = findProperty("curseforge.token")
-        project(closureOf<me.hypherionmc.cursegradle.CurseProject> {
-            mainArtifact(tasks["remapJar"], closureOf<me.hypherionmc.cursegradle.CurseArtifact> {
-                displayName = "${project.version}"
-            })
-
-            id = curseforgeId
-            releaseType = "release"
-            addGameVersion("1.20.1")
-            addGameVersion("Fabric")
-            addGameVersion("Java 17")
-
-            changelog = changelogText
-            changelogType = "markdown"
-        })
-
-        options(closureOf<me.hypherionmc.cursegradle.Options> {
-            forgeGradleIntegration = false
-        })
-    }
-}
-
-githubRelease {
-    token(findProperty("github.token")?.toString())
-
-    val githubProject: String by project
-    val split = githubProject.split("/")
-    owner(split[0])
-    repo(split[1])
-    tagName("${project.version}")
-    targetCommitish("1.20.x/dev")
-    body(changelogText)
-    releaseAssets(tasks["remapJar"].outputs.files)
-}
-
-publishing {
-    publications {
-        create<MavenPublication>("mod") {
-            groupId = "dev.isxander"
-            val modId: String by project
-            artifactId = modId
-
-            from(components["java"])
-            artifact(tasks["remapSourcesJar"])
-        }
-    }
-
-    repositories {
-        val username = "XANDER_MAVEN_USER".let { System.getenv(it) ?: findProperty(it) }?.toString()
-        val password = "XANDER_MAVEN_PASS".let { System.getenv(it) ?: findProperty(it) }?.toString()
-        if (username != null && password != null) {
-            maven(url = "https://maven.isxander.dev/releases") {
-                name = "XanderReleases"
-                credentials {
-                    this.username = username
-                    this.password = password
-                }
-            }
-            
-            tasks.getByName("publishModPublicationToXanderReleasesRepository") {
-                dependsOn("optimizeOutputsOfRemapJar")
-            }
-        } else {
-            println("Xander Maven credentials not satisfied.")
-        }
-    }
-}
-tasks.getByName("generateMetadataFileForModPublication") {
-    dependsOn("optimizeOutputsOfRemapJar")
-}
+//val changelogText = file("changelogs/${project.version}.md").takeIf { it.exists() }?.readText() ?: "No changelog provided."
+//
+//val modrinthId: String by project
+//if (modrinthId.isNotEmpty()) {
+//    modrinth {
+//        token.set(findProperty("modrinth.token")?.toString())
+//        projectId.set(modrinthId)
+//        versionNumber.set("${project.version}")
+//        versionType.set("release")
+//        uploadFile.set(tasks["remapJar"])
+//        gameVersions.set(listOf("1.20.1"))
+//        loaders.set(listOf("fabric", "quilt"))
+//        changelog.set(changelogText)
+//        syncBodyFrom.set(file("README.md").readText())
+//    }
+//}
+//
+//val curseforgeId: String by project
+//if (hasProperty("curseforge.token") && curseforgeId.isNotEmpty()) {
+//    curseforge {
+//        apiKey = findProperty("curseforge.token")
+//        project(closureOf<me.hypherionmc.cursegradle.CurseProject> {
+//            mainArtifact(tasks["remapJar"], closureOf<me.hypherionmc.cursegradle.CurseArtifact> {
+//                displayName = "${project.version}"
+//            })
+//
+//            id = curseforgeId
+//            releaseType = "release"
+//            addGameVersion("1.20.2")
+//            addGameVersion("Quilt")
+//            addGameVersion("Fabric")
+//            addGameVersion("Java 17")
+//
+//            changelog = changelogText
+//            changelogType = "markdown"
+//        })
+//
+//        options(closureOf<me.hypherionmc.cursegradle.Options> {
+//            forgeGradleIntegration = false
+//        })
+//    }
+//}
+//
+//githubRelease {
+//    token(findProperty("github.token")?.toString())
+//
+//    val githubProject: String by project
+//    val split = githubProject.split("/")
+//    owner(split[0])
+//    repo(split[1])
+//    tagName("${project.version}")
+//    targetCommitish("1.20.x/dev")
+//    body(changelogText)
+//    releaseAssets(tasks["remapJar"].outputs.files)
+//}
+//
+//publishing {
+//    publications {
+//        create<MavenPublication>("mod") {
+//            groupId = "dev.isxander"
+//            val modId: String by project
+//            artifactId = modId
+//
+//            from(components["java"])
+//            artifact(tasks["remapSourcesJar"])
+//        }
+//    }
+//
+//    repositories {
+//        val username = "XANDER_MAVEN_USER".let { System.getenv(it) ?: findProperty(it) }?.toString()
+//        val password = "XANDER_MAVEN_PASS".let { System.getenv(it) ?: findProperty(it) }?.toString()
+//        if (username != null && password != null) {
+//            maven(url = "https://maven.isxander.dev/releases") {
+//                name = "XanderReleases"
+//                credentials {
+//                    this.username = username
+//                    this.password = password
+//                }
+//            }
+//
+//            tasks.getByName("publishModPublicationToXanderReleasesRepository") {
+//                dependsOn("optimizeOutputsOfRemapJar")
+//            }
+//        } else {
+//            println("Xander Maven credentials not satisfied.")
+//        }
+//    }
+//}
+//tasks.getByName("generateMetadataFileForModPublication") {
+//    dependsOn("optimizeOutputsOfRemapJar")
+//}
 
