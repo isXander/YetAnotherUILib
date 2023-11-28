@@ -14,8 +14,8 @@ plugins {
 group = "dev.isxander"
 version = "1.0.0+1.20.2"
 
-val testmod by sourceSets.registering {
-    compileClasspath += sourceSets.main.get().compileClasspath
+val testmod = sourceSets.create("testmod") {
+    compileClasspath += sourceSets.main.get().runtimeClasspath
     runtimeClasspath += sourceSets.main.get().runtimeClasspath
 }
 
@@ -25,11 +25,11 @@ loom {
             client()
             ideConfigGenerated(true)
             name("Test Mod")
-            source(testmod.get())
+            source(testmod)
         }
     }
 
-    createRemapConfigurations(testmod.get())
+    createRemapConfigurations(testmod)
 }
 
 repositories {

@@ -41,6 +41,15 @@ public class AnimatedDynamicTextureImage extends DynamicTextureImage {
     private final int frameCount;
 
     private final int packCols, packRows;
+
+    public int getFrameWidth() {
+        return frameWidth;
+    }
+
+    public int getFrameHeight() {
+        return frameHeight;
+    }
+
     private final int frameWidth, frameHeight;
 
     private boolean paused = false;

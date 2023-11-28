@@ -37,7 +37,7 @@ public interface ImageRendererManager {
      * Get an instance of the image renderer manager.
      * @return The image renderer manager.
      */
-    default ImageRendererManager getInstance() {
+    static ImageRendererManager getInstance() {
         return YAUL3.getInstance().imageRendererManager;
     }
 }
