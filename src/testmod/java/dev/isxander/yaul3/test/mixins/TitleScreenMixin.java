@@ -18,6 +18,6 @@ public class TitleScreenMixin extends Screen {
 
     @Inject(method = "init", at = @At("HEAD"))
     public void initWidgets(CallbackInfo ci) {
-        this.addWidget(Button.builder(Component.literal("test"), (btn) -> this.minecraft.setScreen(new TestScreen(Component.literal("Test")))).bounds(5, 5, 50, 20).build());
+        this.addRenderableWidget(Button.builder(Component.literal("test"), (btn) -> this.minecraft.setScreen(new TestScreen(Component.literal("Test")))).bounds(5, 5, 50, 20).build());
     }
 }
