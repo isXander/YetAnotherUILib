@@ -1,91 +1,123 @@
 package dev.isxander.yaul3.impl.image;
 
-import com.mojang.blaze3d.systems.RenderSystem;
-import dev.isxander.yaul3.api.image.ImageRenderer;
-import dev.isxander.yaul3.api.image.ImageRendererFactory;
-import dev.isxander.yaul3.api.image.ImageRendererManager;
-import dev.isxander.yaul3.util.CompletedSupplier;
-import dev.isxander.yaul3.util.LoggerManager;
-import net.minecraft.client.Minecraft;
+import dev.isxander.yaul3.api.image.*;
+import net.fabricmc.fabric.api.resource.IdentifiableResourceReloadListener;
+import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.minecraft.CrashReport;
+import net.minecraft.CrashReportCategory;
+import net.minecraft.ReportedException;
 import net.minecraft.resources.ResourceLocation;
-import org.slf4j.Logger;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.profiling.ProfilerFiller;
+import org.apache.commons.lang3.Validate;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.*;
-import java.util.function.Supplier;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.function.Predicate;
 
 public class ImageRendererManagerImpl implements ImageRendererManager {
-    private static final Logger LOGGER = LoggerManager.createLogger("ImageRendererManager");
-    private static final ExecutorService SINGLE_THREAD_EXECUTOR = Executors.newSingleThreadExecutor(task -> new Thread(task, "YACL Image Prep"));
+    private final Map<ResourceLocation, ImageRendererFactorySupplier.RendererSupplier<?>> IMAGE_RENDERER_FACTORIES = new HashMap<>();
+    private final Map<Predicate<ResourceLocation>, ImageRendererFactorySupplier<?>> FACTORIES = new HashMap<>();
 
-    private final Map<ResourceLocation, CompletableFuture<ImageRenderer>> IMAGE_CACHE = new ConcurrentHashMap<>();
+    private boolean locked;
 
-    @Override
-    @SuppressWarnings("unchecked")
-    public <T extends ImageRenderer> CompletableFuture<T> registerImage(ResourceLocation id, ImageRendererFactory<T> factory) {
-        if (IMAGE_CACHE.containsKey(id)) {
-            return (CompletableFuture<T>) IMAGE_CACHE.get(id);
-        }
+    public ImageRendererManagerImpl() {
+        ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new ReloadListener());
 
-        var future = new CompletableFuture<ImageRenderer>();
-        IMAGE_CACHE.put(id, future);
-
-        SINGLE_THREAD_EXECUTOR.submit(() -> {
-            Supplier<Optional<ImageRendererFactory.ImageSupplier<T>>> supplier =
-                    factory.requiresOffThreadPreparation()
-                            ? CompletedSupplier.of(safelyPrepareFactory(id, factory))
-                            : () -> safelyPrepareFactory(id, factory);
-
-            Minecraft.getInstance().execute(() -> completeImageFactory(id, supplier, future));
-        });
-
-        return (CompletableFuture<T>) future;
+        registerImagePreloader(location -> location.getPath().endsWith(".webp"), ImageFactories.createWEBPFactorySupplier());
+        registerImagePreloader(location -> location.getPath().endsWith(".gif"), ImageFactories.createGIFFactorySupplier());
     }
 
     @Override
-    public <T extends ImageRenderer> void completeImageFactory(ResourceLocation id, Supplier<Optional<ImageRendererFactory.ImageSupplier<T>>> supplier, CompletableFuture<ImageRenderer> future) {
-        RenderSystem.assertOnRenderThread();
+    public <T extends ImageRenderer> T createPreloadedImage(ResourceLocation location) {
+        var rendererFactory = Optional.ofNullable(IMAGE_RENDERER_FACTORIES.get(location))
+                .map(it -> (ImageRendererFactorySupplier.RendererSupplier<T>) it);
 
-        ImageRendererFactory.ImageSupplier<T> completableImage = supplier.get().orElse(null);
-        if (completableImage == null) {
-            return;
-        }
-
-        if (future.isDone()) {
-            LOGGER.error("Image '{}' was already completed", id);
-            return;
-        }
-
-        ImageRenderer image;
-        try {
-            image = completableImage.completeImage();
-        } catch (Exception e) {
-            LOGGER.error("Failed to create image '{}'", id, e);
-            return;
-        }
-
-        future.complete(image);
+        return rendererFactory.orElseThrow(() -> new IllegalArgumentException(location + " is not a loaded image renderer.")).newRenderer();
     }
 
     @Override
-    public void closeAll() {
-        SINGLE_THREAD_EXECUTOR.shutdownNow();
-        IMAGE_CACHE.values().removeIf(future -> {
-            if (future.isDone()) {
-                future.join().close();
+    public <T extends ImageRenderer> void registerImagePreloader(Predicate<ResourceLocation> location, ImageRendererFactorySupplier<T> factory) {
+        Validate.isTrue(!locked, "Cannot register image factory after resource reload has begun.");
+        FACTORIES.put(location, factory);
+    }
+
+
+    private class ReloadListener implements IdentifiableResourceReloadListener {
+        @Override
+        public ResourceLocation getFabricId() {
+            return new ResourceLocation("yet_another_ui_lib_v1", "image_preloader");
+        }
+
+        @Override
+        public @NotNull CompletableFuture<Void> reload(
+                PreparationBarrier synchronizer,
+                ResourceManager manager,
+                ProfilerFiller prepareProfiler,
+                ProfilerFiller applyProfiler,
+                Executor prepareExecutor,
+                Executor applyExecutor
+        ) {
+            locked = true;
+            IMAGE_RENDERER_FACTORIES.clear();
+
+            Map<ResourceLocation, Resource> imageResources = manager.listResources(
+                    "textures",
+                    location -> FACTORIES.keySet().stream().anyMatch(predicate -> predicate.test(location))
+            );
+
+            List<CompletableFuture<Void>> futures = new ArrayList<>(imageResources.size());
+
+            for (Map.Entry<ResourceLocation, Resource> entry : imageResources.entrySet()) {
+                ResourceLocation location = entry.getKey();
+                Resource resource = entry.getValue();
+
+                ImageRendererFactorySupplier<?> factory = FACTORIES
+                        .entrySet()
+                        .stream()
+                        .filter(factoryEntry -> factoryEntry.getKey().test(location))
+                        .map(Map.Entry::getValue)
+                        .findFirst()
+                        .orElse(null);
+
+                if (factory == null) {
+                    throw new IllegalStateException("Could not find valid image factory provider for resource: " + location);
+                }
+
+                CompletableFuture<ImageRendererFactorySupplier.RendererSupplier<?>> imageFuture =
+                        CompletableFuture.supplyAsync(
+                                () -> wrapFactoryCreationError(
+                                        location,
+                                        () -> factory.createFactory(location, resource)
+                                ), prepareExecutor
+                        )
+                        .thenCompose(synchronizer::wait)
+                        .thenApplyAsync(rendererSupplier -> IMAGE_RENDERER_FACTORIES.put(location, rendererSupplier), applyExecutor);
+
+                futures.add(imageFuture.thenCompose(supplier -> null));
             }
-            return true;
-        });
+
+            return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
+        }
+
+        private <T> T wrapFactoryCreationError(ResourceLocation location, DangerousSupplier<T> supplier) {
+            try {
+                return supplier.get();
+            } catch (Exception e) {
+                CrashReport crashReport = CrashReport.forThrowable(e, "Failed to load image");
+                CrashReportCategory category = crashReport.addCategory("YACL Gui");
+                category.setDetail("Image identifier", location.toString());
+                throw new ReportedException(crashReport);
+            }
+        }
     }
 
-    private <T extends ImageRenderer> Optional<ImageRendererFactory.ImageSupplier<T>> safelyPrepareFactory(ResourceLocation id, ImageRendererFactory<T> factory) {
-        try {
-            return Optional.of(factory.prepareImage());
-        } catch (Exception e) {
-            LOGGER.error("Failed to prepare image '{}'", id, e);
-            IMAGE_CACHE.remove(id);
-            return Optional.empty();
-        }
+    @FunctionalInterface
+    interface DangerousSupplier<T> {
+        T get() throws Exception;
     }
 }

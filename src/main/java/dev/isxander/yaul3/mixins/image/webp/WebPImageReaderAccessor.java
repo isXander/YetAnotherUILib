@@ -1,4 +1,4 @@
-package dev.isxander.yaul3.mixins.webp;
+package dev.isxander.yaul3.mixins.image.webp;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;

@@ -18,12 +18,12 @@ import java.util.concurrent.ExecutionException;
 import static org.lwjgl.opengl.GL20.*;
 
 public class ImageButtonWidget extends AbstractWidget {
-    private CompletableFuture<AnimatedDynamicTextureImage> image;
+    private AnimatedDynamicTextureImage image;
     private int contentHeight = this.height;
 
     public ImageButtonWidget(int x, int y, int width, int height, Component message, ResourceLocation image) {
         super(x, y, width, height, message);
-        this.image = ImageRendererManager.getInstance().registerImage(image, AnimatedDynamicTextureImage.createWEBPFromTexture(image));
+        this.image = ImageRendererManager.getInstance().createPreloadedImage(image);
     }
 
     float durationHovered = 1f;
@@ -46,25 +46,16 @@ public class ImageButtonWidget extends AbstractWidget {
         // Ease in out lerp.
         float alphaScale = Mth.clampedLerp(0.9f, 0.2f, Mth.clamp(durationHovered - 1f, 0.0f, 1.0f));
 
-        if(image.isDone()) {
-            try {
-                var contentImage = image.get();
-                if(contentImage != null) {
+        // Scale the image so that the image height is the same as the button height.
+        float neededWidth = image.getFrameWidth() * ((float) this.height / image.getFrameHeight());
 
-                    // Scale the image so that the image height is the same as the button height.
-                    float neededWidth = contentImage.getFrameWidth() * ((float) this.height / contentImage.getFrameHeight());
-
-                    // Scale the image to fit within the width and height of the button.
-                    graphics.pose().pushPose();
-                    // gl bilinear scaling.
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                    this.contentHeight = contentImage.render(graphics, getX(), getY(), (int) neededWidth, delta);
-                    graphics.pose().popPose();
-                }
-            } catch (InterruptedException | ExecutionException ignored) {
-            }
-        }
+        // Scale the image to fit within the width and height of the button.
+        graphics.pose().pushPose();
+        // gl bilinear scaling.
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        this.contentHeight = image.render(graphics, getX(), getY(), (int) neededWidth, delta);
+        graphics.pose().popPose();
 
 //        context.drawTexture(image, getX(), getY(), this.width, this.height, 0, 0, 1920, 1080, 1920, 1080);
 

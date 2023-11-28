@@ -3,7 +3,6 @@ package dev.isxander.yaul3.impl.image;
 import com.mojang.blaze3d.platform.GlConst;
 import com.mojang.blaze3d.platform.GlStateManager;
 import dev.isxander.yaul3.api.image.ImageRenderer;
-import dev.isxander.yaul3.api.image.ImageRendererFactory;
 import dev.isxander.yaul3.debug.DebugProperties;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
@@ -48,9 +47,5 @@ public class ResourceTextureImage implements ImageRenderer {
     @Override
     public void close() {
 
-    }
-
-    public static ImageRendererFactory<ResourceTextureImage> createFactory(ResourceLocation location, float u, float v, int width, int height, int textureWidth, int textureHeight) {
-        return (ImageRendererFactory.OnThread<ResourceTextureImage>) () -> () -> new ResourceTextureImage(location, u, v, width, height, textureWidth, textureHeight);
     }
 }

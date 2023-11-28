@@ -15,10 +15,10 @@ public interface ImageRenderer {
      */
     int render(GuiGraphics graphics, int x, int y, int renderWidth, float tickDelta);
 
+    default void tick() {}
+
     /**
      * Dispose of any resources used by the image.
      */
     void close();
-
-    default void tick() {}
 }
