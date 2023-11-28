@@ -160,7 +160,7 @@ public final class ImageFactories {
 
         closeables.accept(image);
 
-        return () -> new AnimatedDynamicTextureImage(image, frameWidth, frameHeight, frameCount, frameDelays, cols, rows, location);
+        return () -> new AnimatedDynamicTextureImage(image, frameWidth, frameHeight, frameCount, frameDelays, cols, rows, suffixLocation(location, "atlas"));
     }
 
     @FunctionalInterface
@@ -170,4 +170,7 @@ public final class ImageFactories {
 
     private record AnimFrame(int durationMS, int xOffset, int yOffset) {}
 
+    private static ResourceLocation suffixLocation(ResourceLocation location, String suffix) {
+        return new ResourceLocation(location.getNamespace(), location.getPath() + "-" + suffix);
+    }
 }
