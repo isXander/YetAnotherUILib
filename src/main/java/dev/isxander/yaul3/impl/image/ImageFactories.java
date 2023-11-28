@@ -14,14 +14,16 @@ import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.metadata.IIOMetadataNode;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.IntStream;
 
 public final class ImageFactories {
     public static ImageRendererFactorySupplier<AnimatedDynamicTextureImage> createWEBPFactorySupplier() {
-        return (location, resource) -> {
+        return (location, resource, closeableConsumer) -> {
             try (InputStream is = resource.open()) {
                 ImageReader reader = new WebPImageReaderSpi().createReaderInstance();
                 reader.setInput(ImageIO.createImageInputStream(is));
@@ -37,13 +39,13 @@ public final class ImageFactories {
                     };
                 }
 
-                return stitchAndFinishImageReader(reader, animFrameFunction, location);
+                return stitchAndFinishImageReader(reader, animFrameFunction, location, closeableConsumer);
             }
         };
     }
 
     public static ImageRendererFactorySupplier<AnimatedDynamicTextureImage> createGIFFactorySupplier() {
-        return (location, resource) -> {
+        return (location, resource, closeableConsumer) -> {
             try (InputStream is = resource.open()) {
                 ImageReader reader = ImageIO.getImageReadersBySuffix("gif").next();
                 reader.setInput(ImageIO.createImageInputStream(is));
@@ -58,12 +60,12 @@ public final class ImageFactories {
                     return new AnimFrame(delay, 0, 0);
                 };
 
-                return stitchAndFinishImageReader(reader, animFrameFunction, location);
+                return stitchAndFinishImageReader(reader, animFrameFunction, location, closeableConsumer);
             }
         };
     }
 
-    private static ImageRendererFactorySupplier.RendererSupplier<AnimatedDynamicTextureImage> stitchAndFinishImageReader(ImageReader reader, AnimFrameProvider animFrameProvider, ResourceLocation location) throws Exception {
+    private static ImageRendererFactorySupplier.RendererSupplier<AnimatedDynamicTextureImage> stitchAndFinishImageReader(ImageReader reader, AnimFrameProvider animFrameProvider, ResourceLocation location, Consumer<AutoCloseable> closeables) throws Exception {
         if (reader.isSeekForwardOnly()) {
             throw new RuntimeException("Image reader is not seekable");
         }
@@ -155,6 +157,8 @@ public final class ImageFactories {
         if (graphics != null)
             graphics.dispose();
         reader.dispose();
+
+        closeables.accept(image);
 
         return () -> new AnimatedDynamicTextureImage(image, frameWidth, frameHeight, frameCount, frameDelays, cols, rows, location);
     }

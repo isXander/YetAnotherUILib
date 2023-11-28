@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.CrashReport;
 import net.minecraft.CrashReportCategory;
 import net.minecraft.ReportedException;
+import net.minecraft.client.Minecraft;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.Resource;
@@ -22,6 +23,8 @@ import java.util.function.Predicate;
 public class ImageRendererManagerImpl implements ImageRendererManager {
     private final Map<ResourceLocation, ImageRendererFactorySupplier.RendererSupplier<?>> IMAGE_RENDERER_FACTORIES = new HashMap<>();
     private final Map<Predicate<ResourceLocation>, ImageRendererFactorySupplier<?>> FACTORIES = new HashMap<>();
+
+    private final List<AutoCloseable> closeables = new ArrayList<>();
 
     private boolean locked;
 
@@ -92,16 +95,23 @@ public class ImageRendererManagerImpl implements ImageRendererManager {
                         CompletableFuture.supplyAsync(
                                 () -> wrapFactoryCreationError(
                                         location,
-                                        () -> factory.createFactory(location, resource)
+                                        () -> factory.createFactory(location, resource, closeables::add)
                                 ), prepareExecutor
                         )
                         .thenCompose(synchronizer::wait)
                         .thenApplyAsync(rendererSupplier -> IMAGE_RENDERER_FACTORIES.put(location, rendererSupplier), applyExecutor);
 
-                futures.add(imageFuture.thenCompose(supplier -> null));
+                imageFuture.whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        CrashReport crashReport = CrashReport.forThrowable(throwable, "Failed to load image");
+                        CrashReportCategory category = crashReport.addCategory("YACL Gui");
+                        category.setDetail("Image identifier", location.toString());
+                        throw new ReportedException(crashReport);
+                    }
+                });
             }
 
-            return CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new));
+            return CompletableFuture.allOf();
         }
 
         private <T> T wrapFactoryCreationError(ResourceLocation location, DangerousSupplier<T> supplier) {
