@@ -1,6 +1,5 @@
 package dev.isxander.yaul3.test;
 
-
 import dev.isxander.yaul3.impl.widgets.ImageButtonWidget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;

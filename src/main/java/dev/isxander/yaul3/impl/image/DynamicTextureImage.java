@@ -5,16 +5,12 @@ import com.mojang.blaze3d.platform.GlStateManager;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.mojang.blaze3d.systems.RenderSystem;
 import dev.isxander.yaul3.api.image.ImageRenderer;
-import dev.isxander.yaul3.api.image.ImageRendererFactory;
 import dev.isxander.yaul3.debug.DebugProperties;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
-
-import java.io.FileInputStream;
-import java.nio.file.Path;
 
 public class DynamicTextureImage implements ImageRenderer {
     protected static final TextureManager textureManager = Minecraft.getInstance().getTextureManager();
@@ -64,9 +60,5 @@ public class DynamicTextureImage implements ImageRenderer {
         image = null;
         texture = null;
         textureManager.release(uniqueLocation);
-    }
-
-    public static ImageRendererFactory<DynamicTextureImage> fromPath(Path imagePath, ResourceLocation location) {
-        return (ImageRendererFactory.OnThread<DynamicTextureImage>) () -> () -> new DynamicTextureImage(NativeImage.read(new FileInputStream(imagePath.toFile())), location);
     }
 }
