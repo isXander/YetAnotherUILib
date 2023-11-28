@@ -3,6 +3,7 @@ package dev.isxander.yaul3;
 import dev.isxander.yaul3.api.image.ImageRendererManager;
 import dev.isxander.yaul3.impl.image.ImageRendererManagerImpl;
 import net.fabricmc.api.ClientModInitializer;
+import net.minecraft.client.Minecraft;
 
 public class YAUL3 implements ClientModInitializer {
     private static YAUL3 instance = null;
