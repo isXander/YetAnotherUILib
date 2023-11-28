@@ -8,6 +8,7 @@ import dev.isxander.yaul3.api.image.ImageRenderer;
 import dev.isxander.yaul3.debug.DebugProperties;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.renderer.texture.AbstractTexture;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureManager;
 import net.minecraft.resources.ResourceLocation;
@@ -16,7 +17,7 @@ public class DynamicTextureImage implements ImageRenderer {
     protected static final TextureManager textureManager = Minecraft.getInstance().getTextureManager();
 
     protected NativeImage image;
-    protected DynamicTexture texture;
+    protected AbstractTexture texture;
     protected final ResourceLocation uniqueLocation;
     protected final int width, height;
 
@@ -24,9 +25,12 @@ public class DynamicTextureImage implements ImageRenderer {
         RenderSystem.assertOnRenderThread();
 
         this.image = image;
-        this.texture = new DynamicTexture(image);
         this.uniqueLocation = location;
-        textureManager.register(this.uniqueLocation, this.texture);
+        this.texture = textureManager.getTexture(this.uniqueLocation, null);
+        if (this.texture == null) {
+            this.texture = new DynamicTexture(this.image);
+            textureManager.register(this.uniqueLocation, this.texture);
+        }
         this.width = image.getWidth();
         this.height = image.getHeight();
     }
