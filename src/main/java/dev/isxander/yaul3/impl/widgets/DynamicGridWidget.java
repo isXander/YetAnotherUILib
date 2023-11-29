@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 
 public class DynamicGridWidget extends AbstractLayout {
     private final List<GridItem> children = new ArrayList<>();
+    private int padding = 0;
 
     public DynamicGridWidget(int x, int y, int width, int height) {
         super(x, y, width, height);
@@ -21,6 +22,14 @@ public class DynamicGridWidget extends AbstractLayout {
 
     public void addChild(AbstractWidget widget) {
         this.children.add(new GridItem(-1, -1, widget));
+    }
+
+    public void setPadding(int padding) {
+        this.padding = padding;
+    }
+
+    public int getPadding() {
+        return padding;
     }
 
     private boolean canFit(int gridX, int gridY, int cellWidth, int cellHeight, int optimalCells, boolean[][] grid) {
@@ -55,8 +64,9 @@ public class DynamicGridWidget extends AbstractLayout {
 
         int optimalCells = (int) Math.ceil(Math.sqrt(totalCells));
 
-        int cellWidth = this.width / optimalCells;
-        int cellHeight = this.height / optimalCells;
+        // Modify this to include padding.
+        int cellWidth = (this.width) / optimalCells;
+        int cellHeight = (this.height) / optimalCells;
 
         boolean[][] grid = new boolean[optimalCells][optimalCells];
 
@@ -117,16 +127,14 @@ public class DynamicGridWidget extends AbstractLayout {
                         grid[x][y] = true;
                     }
                 }
-
-                System.out.println(grid);
             } else {
                 grid[gridX][gridY] = true;
             }
 
             child.getWidget().setX(currentX);
             child.getWidget().setY(currentY);
-            child.getWidget().setWidth(thisCellWidth);
-            child.getWidget().setHeight(thisCellHeight);
+            child.getWidget().setWidth(thisCellWidth - padding * 2);
+            child.getWidget().setHeight(thisCellHeight - padding * 2);
 
             currentX += thisCellWidth;
             if (currentX >= this.width) {

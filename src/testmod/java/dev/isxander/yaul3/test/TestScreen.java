@@ -20,7 +20,7 @@ public class TestScreen extends Screen {
 
         DynamicGridWidget grid = new DynamicGridWidget(10, 10, this.width - 20, this.height - 20);
 
-        grid.addChild(new ImageButtonWidget(0, 0, 50, 50, Component.literal("Test"), new ResourceLocation("yaul_test", "textures/home.webp")), 2, 1);
+        grid.addChild(new ImageButtonWidget(0, 0, 50, 50, Component.literal("Test"), new ResourceLocation("yaul_test", "textures/home.webp")), 4, 1);
         grid.addChild(new ImageButtonWidget(0, 0, 50, 50, Component.literal("Test"), new ResourceLocation("yaul_test", "textures/home.webp")), 2, 2);
         grid.addChild(new ImageButtonWidget(0, 0, 50, 50, Component.literal("Test"), new ResourceLocation("yaul_test", "textures/home.webp")));
         grid.addChild(new ImageButtonWidget(0, 0, 50, 50, Component.literal("Test"), new ResourceLocation("yaul_test", "textures/home.webp")));
@@ -30,6 +30,8 @@ public class TestScreen extends Screen {
         grid.addChild(new ImageButtonWidget(0, 0, 50, 50, Component.literal("Test"), new ResourceLocation("yaul_test", "textures/home.webp")));
         grid.addChild(new ImageButtonWidget(0, 0, 50, 50, Component.literal("Test"), new ResourceLocation("yaul_test", "textures/home.webp")));
         grid.addChild(new ImageButtonWidget(0, 0, 50, 50, Component.literal("Test"), new ResourceLocation("yaul_test", "textures/home.webp")));
+
+        grid.setPadding(5);
 
         grid.calculateLayout();
 
