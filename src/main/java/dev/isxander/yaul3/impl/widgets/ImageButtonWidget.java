@@ -1,8 +1,7 @@
 package dev.isxander.yaul3.impl.widgets;
 
 
-import dev.isxander.yaul3.api.animation.Animation;
-import dev.isxander.yaul3.api.animation.EasingFunction;
+import dev.isxander.yaul3.api.animation.*;
 import dev.isxander.yaul3.api.image.ImageRendererManager;
 import dev.isxander.yaul3.impl.image.AnimatedDynamicTextureImage;
 import net.minecraft.client.Minecraft;
@@ -29,7 +28,9 @@ public class ImageButtonWidget extends AbstractWidget {
     }
 
     private float alpha = 0.9f;
-    private Animation animation;
+    private int textXOffset = 20;
+    private int textYOffset = 20;
+    private Animatable animation;
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float delta) {
@@ -40,16 +41,34 @@ public class ImageButtonWidget extends AbstractWidget {
 
         if (isHovered && !prevHovered) { // just started hovering
             if (this.animation != null) this.animation.stopNow();
-            this.animation = Animation.of(5)
-                    .consumerF(f -> alpha = f, alpha, 0.1f)
-                    .easing(EasingFunction.EASE_OUT_SIN)
-                    .play();
+            this.animation = AnimationSequence.of(
+                    Animation.of(5)
+                            .consumerF(f -> alpha = f, alpha, 0.1f)
+                            .easing(EasingFunction.EASE_OUT_SIN),
+                    AnimationGroup.of(
+                            Animation.of(10)
+                                    .consumerI(f -> textXOffset = f, textXOffset, 0)
+                                    .easing(EasingFunction.EASE_OUT_EXPO),
+                            Animation.of(5)
+                                    .consumerI(f -> textYOffset = f, textYOffset, 0)
+                                    .easing(EasingFunction.EASE_OUT_EXPO)
+                    )
+            ).play();
         } else if (!isHovered && prevHovered) { // just stopped hovering
             if (this.animation != null) this.animation.stopNow();
-            this.animation = Animation.of(5)
-                    .consumerF(f -> alpha = f, alpha, 0.9f)
-                    .easing(EasingFunction.EASE_IN_SIN)
-                    .play();
+            this.animation = AnimationSequence.of(
+                    Animation.of(5)
+                            .consumerF(f -> alpha = f, alpha, 0.9f)
+                            .easing(EasingFunction.EASE_IN_SIN),
+                    AnimationGroup.of(
+                            Animation.of(10)
+                                    .consumerI(f -> textXOffset = f, textXOffset, 20)
+                                    .easing(EasingFunction.EASE_OUT_EXPO),
+                            Animation.of(5)
+                                    .consumerI(f -> textYOffset = f, textYOffset, 20)
+                                    .easing(EasingFunction.EASE_OUT_EXPO)
+                    )
+            ).play();
         }
 
         // Scale the image so that the image height is the same as the button height.
@@ -73,8 +92,8 @@ public class ImageButtonWidget extends AbstractWidget {
 
         float fontScaling = 1.24f;
 
-        int unscaledTextX = this.getX() + 5;
-        int unscaledTextY = this.getY() + this.height - client.font.lineHeight - 5;
+        int unscaledTextX = this.getX() + 5 + textXOffset;
+        int unscaledTextY = this.getY() + this.height - client.font.lineHeight - 5 + textYOffset;
         int textX = (int) (unscaledTextX / fontScaling);
         int textY = (int) (unscaledTextY / fontScaling);
         int endX = (int) ((this.getX() + this.width - 5) / fontScaling);
