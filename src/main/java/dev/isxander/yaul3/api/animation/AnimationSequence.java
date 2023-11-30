@@ -17,8 +17,5 @@ public interface AnimationSequence extends Animatable {
     AnimationSequence play();
 
     @Override
-    void skipToEnd();
-
-    @Override
     AnimationSequence copy();
 }

@@ -45,6 +45,13 @@ public class AnimationGroupImpl implements AnimationGroup {
     }
 
     @Override
+    public void stopNow() {
+        animatables.forEach(Animatable::stopNow);
+        done = true;
+        started = true;
+    }
+
+    @Override
     public boolean hasStarted() {
         return started;
     }
