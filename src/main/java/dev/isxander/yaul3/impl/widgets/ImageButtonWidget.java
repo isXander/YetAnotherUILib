@@ -11,10 +11,6 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
-import net.minecraft.util.Mth;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 
 import static org.lwjgl.opengl.GL20.*;
 
@@ -40,7 +36,7 @@ public class ImageButtonWidget extends AbstractWidget {
         this.isHovered = mouseX >= this.getX() && mouseY >= this.getY() && mouseX < this.getX() + this.width && mouseY < this.getY() + this.height;
 
         if (isHovered && !prevHovered) { // just started hovering
-            if (this.animation != null) this.animation.stopNow();
+            if (this.animation != null) this.animation.abort();
             this.animation = AnimationSequence.of(
                     Animation.of(5)
                             .consumerF(f -> alpha = f, alpha, 0.1f)
@@ -55,7 +51,7 @@ public class ImageButtonWidget extends AbstractWidget {
                     )
             ).play();
         } else if (!isHovered && prevHovered) { // just stopped hovering
-            if (this.animation != null) this.animation.stopNow();
+            if (this.animation != null) this.animation.abort();
             this.animation = AnimationSequence.of(
                     Animation.of(5)
                             .consumerF(f -> alpha = f, alpha, 0.9f)

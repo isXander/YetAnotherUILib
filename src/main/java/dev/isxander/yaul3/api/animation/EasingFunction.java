@@ -2,6 +2,11 @@ package dev.isxander.yaul3.api.animation;
 
 import net.minecraft.util.Mth;
 
+/**
+ * Represents a function through 0-1.
+ *
+ * @see <a href="https://easings.net">https://easings.net</a>
+ */
 public interface EasingFunction {
     float ease(float t);
 

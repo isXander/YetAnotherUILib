@@ -112,7 +112,7 @@ public class AnimationImpl implements Animation {
     }
 
     @Override
-    public void stopNow() {
+    public void abort() {
         done = true;
     }
 

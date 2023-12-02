@@ -21,11 +21,13 @@ public class AnimationSequenceImpl implements AnimationSequence {
     }
 
     @Override
-    public AnimationSequence push(Animatable... animation) {
-        for (Animatable animatable : animation)
+    public AnimationSequence push(Animatable... animatables) {
+        Validate.isTrue(!this.isDone(), "Cannot add to sequence that has already completed.");
+
+        for (Animatable animatable : animatables)
             Validate.isTrue(!animatable.hasStarted(), "Cannot add an animation that has already started!");
 
-        queue.addAll(List.of(animation));
+        queue.addAll(List.of(animatables));
         return this;
     }
 
@@ -78,9 +80,9 @@ public class AnimationSequenceImpl implements AnimationSequence {
     }
 
     @Override
-    public void stopNow() {
+    public void abort() {
         while (current != null) {
-            current.stopNow();
+            current.abort();
             current = queue.poll();
         }
         done = true;

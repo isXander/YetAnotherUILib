@@ -19,6 +19,8 @@ public class AnimationGroupImpl implements AnimationGroup {
 
     @Override
     public AnimationGroup add(Animatable... animation) {
+        Validate.isTrue(!this.hasStarted(), "Cannot add to group that has already started.");
+
         for (Animatable animatable : animation)
             Validate.isTrue(!animatable.hasStarted(), "Cannot add an animation that has already started!");
 
@@ -46,8 +48,8 @@ public class AnimationGroupImpl implements AnimationGroup {
     }
 
     @Override
-    public void stopNow() {
-        animatables.forEach(Animatable::stopNow);
+    public void abort() {
+        animatables.forEach(Animatable::abort);
         done = true;
         started = true;
     }

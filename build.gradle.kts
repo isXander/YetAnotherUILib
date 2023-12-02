@@ -47,8 +47,9 @@ repositories {
     maven("https://maven.isxander.dev/releases")
     maven("https://maven.quiltmc.org/repository/release")
     maven("https://jitpack.io")
-    maven("https://oss.sonatype.org/content/repositories/snapshots")
-
+    maven("https://maven.parchmentmc.org") {
+        name = "ParchmentMC"
+    }
     maven("https://api.modrinth.com/maven") {
         name = "Modrinth"
         content {
@@ -62,8 +63,8 @@ val minecraftVersion = libs.versions.minecraft.get()
 dependencies {
     minecraft(libs.minecraft)
     mappings(loom.layered {
-        mappings("org.quiltmc:quilt-mappings:$minecraftVersion+build.${libs.versions.quilt.mappings.get()}:intermediary-v2")
         officialMojangMappings()
+        parchment("org.parchmentmc.data:parchment-1.20.2:${libs.versions.parchment.get()}@zip")
     })
     modImplementation(libs.fabric.loader)
 
@@ -198,8 +199,7 @@ publishing {
     publications {
         create<MavenPublication>("mod") {
             groupId = "dev.isxander"
-            val modId: String by project
-            artifactId = modId
+            artifactId = "yet-another-ui-lib"
 
             artifact(tasks["remapJar"])
             artifact(tasks["remapSourcesJar"])
