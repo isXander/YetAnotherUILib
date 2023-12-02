@@ -31,7 +31,8 @@ public class AnimationGroupImpl implements AnimationGroup {
         if (done) return;
 
         started = true;
-        done = animatables.stream().allMatch(animatable -> {
+        // this should not be allMatch, because it will terminate when it sees the first false
+        done = !animatables.stream().noneMatch(animatable -> {
             animatable.tick(tickDelta);
             return animatable.isDone();
         });
@@ -40,6 +41,13 @@ public class AnimationGroupImpl implements AnimationGroup {
     @Override
     public void skipToEnd() {
         animatables.forEach(Animatable::skipToEnd);
+        done = true;
+        started = true;
+    }
+
+    @Override
+    public void stopNow() {
+        animatables.forEach(Animatable::stopNow);
         done = true;
         started = true;
     }

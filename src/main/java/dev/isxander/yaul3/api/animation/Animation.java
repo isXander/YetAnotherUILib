@@ -24,8 +24,5 @@ public interface Animation extends Animatable {
     Animation copy();
 
     @Override
-    void skipToEnd();
-
-    @Override
     Animation play();
 }

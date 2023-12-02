@@ -112,6 +112,11 @@ public class AnimationImpl implements Animation {
     }
 
     @Override
+    public void stopNow() {
+        done = true;
+    }
+
+    @Override
     public Animation play() {
         Animator.INSTANCE.add(this);
         return this;

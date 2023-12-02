@@ -9,6 +9,7 @@ public interface Animatable {
     void tick(float tickDelta);
 
     void skipToEnd();
+    void stopNow();
 
     boolean hasStarted();
     boolean isDone();

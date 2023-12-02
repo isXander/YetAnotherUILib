@@ -78,6 +78,15 @@ public class AnimationSequenceImpl implements AnimationSequence {
     }
 
     @Override
+    public void stopNow() {
+        while (current != null) {
+            current.stopNow();
+            current = queue.poll();
+        }
+        done = true;
+    }
+
+    @Override
     public AnimationSequence copy() {
         Validate.isTrue(!started, "Cannot copy an animation sequence that has already started.");
 
