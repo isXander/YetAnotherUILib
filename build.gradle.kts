@@ -134,7 +134,8 @@ tasks {
 //}
 
 java {
-    withSourcesJar()   
+    withSourcesJar()
+    withJavadocJar()
 }
 
 //val changelogText = file("changelogs/${project.version}.md").takeIf { it.exists() }?.readText() ?: "No changelog provided."
@@ -200,8 +201,9 @@ publishing {
             val modId: String by project
             artifactId = modId
 
-            from(components["java"])
+            artifact(tasks["remapJar"])
             artifact(tasks["remapSourcesJar"])
+            artifact(tasks["javadocJar"])
         }
     }
 
