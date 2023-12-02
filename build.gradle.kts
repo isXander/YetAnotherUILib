@@ -7,12 +7,21 @@ plugins {
 //    alias(libs.plugins.cursegradle)
 //    alias(libs.plugins.github.release)
 //    alias(libs.plugins.machete)
-//    alias(libs.plugins.grgit)
-//    `maven-publish`
+    alias(libs.plugins.grgit)
+    `maven-publish`
 }
 
 group = "dev.isxander"
-version = "1.0.0+1.20.2"
+version = "1.0.0"
+
+val buildTarget = libs.versions.minecraft.get()
+val snapshot = "${grgit.branch.current().name.replace('/', '.')}-SNAPSHOT"
+
+version = if (System.getenv().containsKey("GITHUB_ACTIONS")) {
+    "$version+$snapshot"
+} else {
+    "$version+$buildTarget"
+}
 
 val testmod = sourceSets.create("testmod") {
     compileClasspath += sourceSets.main.get().runtimeClasspath
@@ -183,40 +192,52 @@ java {
 //    body(changelogText)
 //    releaseAssets(tasks["remapJar"].outputs.files)
 //}
-//
-//publishing {
-//    publications {
-//        create<MavenPublication>("mod") {
-//            groupId = "dev.isxander"
-//            val modId: String by project
-//            artifactId = modId
-//
-//            from(components["java"])
-//            artifact(tasks["remapSourcesJar"])
-//        }
-//    }
-//
-//    repositories {
-//        val username = "XANDER_MAVEN_USER".let { System.getenv(it) ?: findProperty(it) }?.toString()
-//        val password = "XANDER_MAVEN_PASS".let { System.getenv(it) ?: findProperty(it) }?.toString()
-//        if (username != null && password != null) {
-//            maven(url = "https://maven.isxander.dev/releases") {
-//                name = "XanderReleases"
-//                credentials {
-//                    this.username = username
-//                    this.password = password
-//                }
-//            }
-//
-//            tasks.getByName("publishModPublicationToXanderReleasesRepository") {
-//                dependsOn("optimizeOutputsOfRemapJar")
-//            }
-//        } else {
-//            println("Xander Maven credentials not satisfied.")
-//        }
-//    }
-//}
-//tasks.getByName("generateMetadataFileForModPublication") {
-//    dependsOn("optimizeOutputsOfRemapJar")
-//}
+
+publishing {
+    publications {
+        create<MavenPublication>("mod") {
+            groupId = "dev.isxander"
+            val modId: String by project
+            artifactId = modId
+
+            from(components["java"])
+            artifact(tasks["remapSourcesJar"])
+        }
+    }
+
+    repositories {
+        val username = "XANDER_MAVEN_USER".let { System.getenv(it) ?: findProperty(it) }?.toString()
+        val password = "XANDER_MAVEN_PASS".let { System.getenv(it) ?: findProperty(it) }?.toString()
+        if (username != null && password != null) {
+            maven(url = "https://maven.isxander.dev/releases") {
+                name = "XanderReleases"
+                credentials {
+                    this.username = username
+                    this.password = password
+                }
+            }
+
+            maven(url = "https://maven.isxander.dev/snapshots") {
+                name = "XanderSnapshots"
+                credentials {
+                    this.username = username
+                    this.password = password
+                }
+            }
+
+            tasks.getByName("publishModPublicationToXanderReleasesRepository") {
+                dependsOn("optimizeOutputsOfRemapJar")
+            }
+
+            tasks.getByName("publishModPublicationToXanderSnapshotsRepository") {
+                dependsOn("optimizeOutputsOfRemapJar")
+            }
+        } else {
+            println("Xander Maven credentials not satisfied.")
+        }
+    }
+}
+tasks.getByName("generateMetadataFileForModPublication") {
+    dependsOn("optimizeOutputsOfRemapJar")
+}
 
