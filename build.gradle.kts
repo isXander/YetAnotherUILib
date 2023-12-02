@@ -224,14 +224,6 @@ publishing {
                     this.password = password
                 }
             }
-
-            tasks.getByName("publishModPublicationToXanderReleasesRepository") {
-                dependsOn("optimizeOutputsOfRemapJar")
-            }
-
-            tasks.getByName("publishModPublicationToXanderSnapshotsRepository") {
-                dependsOn("optimizeOutputsOfRemapJar")
-            }
         } else {
             println("Xander Maven credentials not satisfied.")
         }
