@@ -1,5 +1,6 @@
 package dev.isxander.yaul3.impl.widgets;
 
+import dev.isxander.yaul3.api.ui.LayoutWidget;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.layouts.AbstractLayout;
 import net.minecraft.client.gui.layouts.LayoutElement;
@@ -30,6 +31,14 @@ public class DynamicGridWidget extends AbstractLayout {
 
     public int getPadding() {
         return padding;
+    }
+
+    public void setWidth(int width) {
+        this.width = width;
+    }
+
+    public void setHeight(int height) {
+        this.height = height;
     }
 
     private boolean canFit(int gridX, int gridY, int cellWidth, int cellHeight, int optimalCells, boolean[][] grid) {

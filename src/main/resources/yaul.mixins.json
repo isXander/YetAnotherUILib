@@ -8,6 +8,7 @@
     "image.webp.WebPImageReaderAccessor"
   ],
   "client": [
-    "animation.MixinMinecraft"
+    "animation.MixinMinecraft",
+    "layout.ScreenAccessor"
   ]
 }
